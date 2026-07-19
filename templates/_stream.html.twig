@@ -1,0 +1,7 @@
+{% block update %}
+    <twig:Turbo:Stream:Update target="#bot-message-streamed">{{ message|markdown_to_html }}</twig:Turbo:Stream:Update>
+{% endblock %}
+
+{% block end %}
+    <twig:Turbo:Stream:Remove target="#bot-message-stream"/>
+{% endblock %}
