@@ -1,7 +1,8 @@
 services:
   - type: web
     name: symfony-ai-demo
-    env: php
+    env: docker
+    dockerfilePath: Dockerfile
     plan: free
     envVars:
       - key: APP_ENV
@@ -14,5 +15,3 @@ services:
         sync: false
       - key: GEMINI_API_KEY
         sync: false
-    buildCommand: "composer install --no-dev --no-interaction --optimize-autoloader && php bin/console cache:clear && php bin/console asset-map:compile && php bin/console ai:store:setup ai.store.postgres.symfony_blog --force && php bin/console ai:store:index blog -vv"
-    startCommand: "vendor/bin/heroku-php-nginx public/"
