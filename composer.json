@@ -17,6 +17,7 @@
         "symfony/ai-bundle": "^0.6",
         "symfony/ai-chat": "^0.6",
         "symfony/ai-clock-tool": "^0.6",
+        "symfony/ai-gemini-platform": "^0.6",
         "symfony/ai-hugging-face-platform": "^0.6",
         "symfony/ai-open-ai-platform": "^0.6",
         "symfony/ai-postgres-store": "^0.6",
