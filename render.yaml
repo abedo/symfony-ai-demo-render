@@ -1,8 +1,7 @@
 services:
   - type: web
     name: symfony-ai-demo
-    env: docker
-    dockerfilePath: Dockerfile
+    env: php
     plan: free
     envVars:
       - key: APP_ENV
@@ -10,9 +9,10 @@ services:
       - key: APP_SECRET
         generateValue: true
       - key: DATABASE_URL
-        sync: false # Wkleisz tutaj link z Neon.tech w panelu Render
+        sync: false # Tutaj wkleisz link do bazy Neon.tech w panelu Render
       - key: OPENAI_API_KEY
         sync: false
       - key: GEMINI_API_KEY
         sync: false
-    buildCommand: "php bin/console ai:store:setup ai.store.postgres.symfony_blog --force && php bin/console ai:store:index blog -vv"
+    buildCommand: "composer install --no-dev --no-interaction --optimize-autoloader && php bin/console cache:clear && php bin/console asset-map:compile && php bin/console ai:store:setup ai.store.postgres.symfony_blog --force && php bin/console ai:store:index blog -vv"
+    startCommand: "vendor/bin/heroku-php-nginx public/"
