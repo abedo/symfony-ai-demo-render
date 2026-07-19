@@ -32,7 +32,7 @@ RUN composer install --no-dev --no-interaction --optimize-autoloader --classmap-
 
 # Czyszczenie i rozgrzanie pamięci podręcznej oraz kompilacja assetów (Asset Mapper)
 RUN php bin/console cache:clear
-RUN php bin/console asset-mapper:compile
+RUN php bin/console asset-map:compile
 
 EXPOSE 80
 EXPOSE 443
