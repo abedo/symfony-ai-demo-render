@@ -1,12 +1,9 @@
 import './bootstrap.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './styles/tokens.css';
 import './styles/app.css';
-import './styles/blog.css';
 import './styles/crop.css';
 import './styles/recipe.css';
-import './styles/speech.css';
-import './styles/stream.css';
-import './styles/youtube.css';
-import './styles/video.css';
-import './styles/wikipedia.css';
 import './styles/travel.css';
+import './styles/movies.css';
+import './styles/mcp.css';

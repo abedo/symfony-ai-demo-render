@@ -15,10 +15,15 @@ use App\Travel\Data\Itinerary;
 use Symfony\AI\Agent\AgentInterface;
 use Symfony\AI\Platform\Message\Message;
 use Symfony\AI\Platform\Message\MessageBag;
-use Symfony\AI\Platform\Result\ObjectResult;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 
+/**
+ * Session-backed travel chat that asks the agent for a structured {@see Itinerary}.
+ *
+ * The readable text of the itinerary is stored as the assistant message content, while the
+ * itinerary object itself is kept in the message metadata so the UI can render it as a plan.
+ */
 final class Chat
 {
     private const SESSION_KEY = 'travel-chat';
@@ -52,16 +57,12 @@ final class Chat
         $messages = $this->loadMessages();
 
         $messages->add(Message::ofUser($message));
-        $result = $this->agent->call($messages, ['response_format' => Itinerary::class]);
-
-        \assert($result instanceof ObjectResult);
-
-        $itinerary = $result->getContent();
+        $itinerary = $this->agent->call($messages, ['response_format' => Itinerary::class])->asObject();
 
         \assert($itinerary instanceof Itinerary);
 
         $assistantMessage = Message::ofAssistant($itinerary->toString());
-        $assistantMessage->getMetadata()->add('itinerary', $result->getContent());
+        $assistantMessage->getMetadata()->add('itinerary', $itinerary);
         $messages->add($assistantMessage);
 
         $this->saveMessages($messages);

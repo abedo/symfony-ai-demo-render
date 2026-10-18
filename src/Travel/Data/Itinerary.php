@@ -11,7 +11,7 @@
 
 namespace App\Travel\Data;
 
-use Symfony\AI\Platform\Contract\JsonSchema\Attribute\With;
+use Symfony\AI\Platform\Contract\JsonSchema\Attribute\Schema;
 
 final class Itinerary
 {
@@ -23,13 +23,13 @@ final class Itinerary
     /**
      * @var int Total duration in days
      */
-    #[With(minimum: 1, maximum: 14)]
+    #[Schema(minimum: 1, maximum: 14)]
     public int $durationInDays;
 
     /**
      * @var string Budget category
      */
-    #[With(enum: ['Budget', 'Moderate', 'Luxury'])]
+    #[Schema(enum: ['Budget', 'Moderate', 'Luxury'])]
     public string $budget;
 
     /**

@@ -4,7 +4,9 @@ framework:
     #csrf_protection: true
 
     # Note that the session will be started ONLY if you read or write from it.
-    session: true
+    session:
+        # Own cookie name, so sessions of other apps on localhost (e.g. other Symfony AI demos) are not picked up
+        name: SYMFONY_AI_RENDER
 
     #esi: true
     #fragments: true

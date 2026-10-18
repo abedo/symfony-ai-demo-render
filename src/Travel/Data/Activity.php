@@ -11,14 +11,14 @@
 
 namespace App\Travel\Data;
 
-use Symfony\AI\Platform\Contract\JsonSchema\Attribute\With;
+use Symfony\AI\Platform\Contract\JsonSchema\Attribute\Schema;
 
 final class Activity
 {
     /**
      * @var string Time of the activity (e.g., "Morning", "Afternoon", "Evening")
      */
-    #[With(enum: ['Morning', 'Afternoon', 'Evening'])]
+    #[Schema(enum: ['Morning', 'Afternoon', 'Evening'])]
     public string $time;
 
     /**

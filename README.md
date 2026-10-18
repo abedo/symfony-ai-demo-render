@@ -16,13 +16,15 @@ What you need to run this demo:
 * [Docker](https://www.docker.com/) with [Docker Compose Plugin](https://docs.docker.com/compose/)
 * Your Favorite IDE or Editor
 * An [OpenAI API Key](https://platform.openai.com/docs/api-reference/create-and-export-an-api-key)
+* [Node.js](https://nodejs.org/) - only for the MCP example: one of its three servers speaks the
+  legacy HTTP+SSE transport and is reached through `npx mcp-remote`
 
 ## Technology
 
 This small demo sits on top of following technologies:
 
 * [PHP >= 8.4](https://www.php.net/releases/8.4/en.php)
-* [Symfony 8.0 incl. Twig, Asset Mapper & UX](https://symfony.com/)
+* [Symfony 8.1 incl. Twig, Asset Mapper & UX](https://symfony.com/)
 * [Bootstrap 5](https://getbootstrap.com/docs/5.0/getting-started/introduction/)
 * [OpenAI's GPT & Embeddings](https://platform.openai.com/docs/overview)
 * [PostgreSQL with pgvector](https://github.com/pgvector/pgvector)
@@ -86,16 +88,57 @@ symfony console ai:store:retrieve blog "Week of Symfony"
 
 **Don't forget to set up the project in your favorite IDE or editor.**
 
+## Testing
+
+```shell
+vendor/bin/phpunit                  # unit and integration tests
+vendor/bin/phpunit --testsuite e2e  # end-to-end tests in a real browser
+```
+
+### End-to-End Tests
+
+The `e2e` suite uses [Symfony Panther](https://github.com/symfony/panther) to click through all eleven
+use cases and assert the Symfony AI panel of the profiler for the very request the click triggered.
+Every test calls an AI platform for real, which costs money and takes time - the suite is therefore
+excluded from the default one, and meant to be run locally.
+
+Next to the setup above, it needs:
+
+* **Chrome or Chromium** with a matching `chromedriver`, which `vendor/bin/bdi detect drivers`
+  downloads into `drivers/`. If only a Snap or Flatpak Chromium is installed, point Panther at it
+  with `PANTHER_CHROME_BINARY` in `.env.test.local`.
+* **API keys** in `.env.local`, or exported in your environment - a test is skipped when the key of
+  its use case is missing: `OPENAI_API_KEY` for nine of them, `HUGGINGFACE_API_KEY` for the image
+  cropping, `MISTRAL_API_KEY` for the document OCR.
+* **ffmpeg** (optional) to convert the audio fixture for the fake microphone of the speech use case.
+
+The blog store does not need to be indexed beforehand: `StoreTest` drives the indexing pipeline
+through the console commands, and `BlogTest` sets the store up and indexes it when it is empty. Both
+skip themselves when the database is not running.
+
+Panther boots the application in the **dev** environment, because the profiler - and with it the
+Symfony AI panel - only collects data with `kernel.debug` enabled. The web server therefore reads
+the real API keys from `.env.local` itself. Chrome fakes camera and microphone, so the video and
+speech use cases run without a human in front of the screen.
+
+```shell
+vendor/bin/phpunit --testsuite e2e --filter BlogTest      # a single use case
+PANTHER_NO_HEADLESS=1 vendor/bin/phpunit --testsuite e2e  # watch the browser
+```
+
+Screenshots of failing tests are written to `var/error-screenshots/`.
+
 ## Functionality
 
-* The chatbot application is a simple and small Symfony 8.0 application.
+* The chatbot application is a simple and small Symfony 8.1 application.
 * The UI is coupled to a [Twig LiveComponent](https://symfony.com/bundles/ux-live-component/current/index.html), that integrates different `Chat` implementations on top of the user's session.
-* You can reset the chat context by hitting the `Reset` button in the top right corner.
-* You find three different usage scenarios in the upper navbar.
+* You can reset the chat context by hitting the `Reset chat` button in the top right corner.
+* You find eleven different usage scenarios in the upper navbar.
 
 ### MCP
 
-Demo MCP server added with a `current-time` tool to return the current time, with an optional format string.
+Demo MCP server exposing a `current-time` tool and a **Movies** MCP App — an interactive HTML UI (`#[AsMcpApp]`)
+that renders the movie collection as a searchable grid in hosts supporting [MCP Apps](https://github.com/modelcontextprotocol/ext-apps).
 
 To add the server, add the following configuration to your MCP Client's settings, e.g. your IDE:
 ```json
@@ -144,10 +187,11 @@ npx @modelcontextprotocol/inspector php bin/console mcp:server
 
 Which opens a web UI to interactively test the MCP server.
 
-## AI Mate - MCP Development Assistant
+## AI Mate - Development CLI
 
-[Symfony AI Mate](https://github.com/symfony/ai-mate) is an MCP (Model Context Protocol) server that provides AI
-assistants with Symfony-specific development capabilities.
+[Symfony AI Mate](https://github.com/symfony/ai-mate) is a command-line assistant that gives coding
+agents Symfony-specific knowledge about this application. There is no server to start: the agent
+runs `vendor/bin/mate` like any other command.
 
 ### Installation & Setup
 
@@ -164,29 +208,25 @@ vendor/bin/mate init
 vendor/bin/mate discover
 ```
 
-### MCP Client Configuration
+`mate init` writes the instructions your agent reads (`mate/AGENT_INSTRUCTIONS.md` plus a managed
+block in `AGENTS.md`, imported by `CLAUDE.md`) and installs the skills into `.agents/skills/`, with
+a mirror in `.claude/skills/`. No client-specific configuration file is involved.
 
-The `mcp.json` file in the project root enables automatic MCP client detection:
+### Running Tools
 
-```json
-{
-  "mcpServers": {
-    "symfony-ai-mate": {
-      "command": "./vendor/bin/mate",
-      "args": ["serve"]
-    }
-  }
-}
+```shell
+vendor/bin/mate tools:list                            # what is available
+vendor/bin/mate tools:inspect symfony-ai-features     # parameters and JSON input schema
+vendor/bin/mate tools:call symfony-ai-features        # run it
+vendor/bin/mate tools:call symfony-profiler-list --limit=1
 ```
-
-For other projects, add AI Mate to your MCP client settings (e.g., `~/.claude/mcp.json`, IDE settings, etc.).
 
 ### Custom Capability Example
 
-This demo includes a **`symfony-ai-features`** tool (see `mate/SymfonyAiFeaturesTool.php`) that analyzes the project's
+This demo includes a **`symfony-ai-features`** tool (see `mate/src/SymfonyAiFeaturesTool.php`) that analyzes the project's
 AI configuration and reports all available platforms, agents, tools, stores, and packages.
 
-**Try it in your MCP-enabled chat:**
+**Try it in your coding agent:**
 
 > "Which Symfony AI features are available in this demo?"
 >
@@ -198,17 +238,11 @@ AI configuration and reports all available platforms, agents, tools, stores, and
 >
 > "Is the php extension intl installed?"
 
-The AI assistant will use the `symfony-ai-features` and other MCP tool to provide detailed information about project
-internals.
+The agent will call `symfony-ai-features` and the other Mate tools to answer from the project
+itself rather than from reading the code.
 
 ### Creating Custom Tools
 
-Create tools in `mate/src/` and register them in `mate/config.php`. See the
+Add a class with a public method carrying `#[MateTool]` under `mate/src/`, then run
+`composer dump-autoload` and verify with `vendor/bin/mate tools:list`. See the
 [AI Mate documentation](https://symfony.com/doc/current/ai/components/mate.html) for detailed guides.
-
-### Testing
-
-```shell
-# Test with MCP Inspector
-npx @modelcontextprotocol/inspector ./vendor/bin/mate serve
-```
